@@ -22,6 +22,9 @@
         "variant": "c",
         "vector": "c",
         "memory": "c",
-        "complex": "c"
+        "complex": "c",
+        "__bit_reference": "c",
+        "bitset": "c",
+        "unordered_map": "c"
     }
 }

@@ -73,6 +73,20 @@ int main(void)
             else{
                 sprintf(reply, "%s", "fail");
             }
+        }
+        else if (operationtype == 4){
+            for(int i = 0; i < allRecords->numline; i++){
+                printf("%d %s %s %d\n", allRecords->record[i].num, allRecords->record[i].sender, 
+                                        allRecords->record[i].receiver, allRecords->record[i].amount);
+            }
+            sortRecords(allRecords, 0, allRecords->numline - 1);
+
+            for(int i = 0; i < allRecords->numline; i++){
+                printf("%d %s %s %d\n", allRecords->record[i].num, allRecords->record[i].sender, 
+                                        allRecords->record[i].receiver, allRecords->record[i].amount);
+            }
+            sprintf(reply, "%s", "TLIST");
+
         } 
         
         printf("reply = %s", reply);

@@ -101,6 +101,36 @@ int init_socket(const char *host,const char *port, int socketType){
     }
     return sockfd;
 }
+void sortRecords(AllRecords *allRecords, int l, int r){
+    printf("sort\n");
+    if(l >= r) return;
+    int i = l - 1, j = r + 1, x = allRecords->record[l + (r - l)/2].num;
+    while(i < j){
+        while(allRecords->record[++i].num < x);
+        while(allRecords->record[--j].num > x);
+        if(i<j){
+            //swap 
+            Records temp;
+            temp.num = allRecords->record[i].num;
+            temp.amount = allRecords->record[i].amount;
+            strcpy(temp.sender, allRecords->record[i].sender);
+            strcpy(temp.receiver, allRecords->record[i].receiver);
+
+            allRecords->record[i].num = allRecords->record[j].num;
+            allRecords->record[i].amount = allRecords->record[j].amount;
+            strcpy(allRecords->record[i].sender, allRecords->record[j].sender);
+            strcpy(allRecords->record[i].receiver, allRecords->record[j].receiver);
+
+            allRecords->record[j].num = temp.num;
+            allRecords->record[j].amount = temp.amount;
+            strcpy(allRecords->record[j].sender, temp.sender);
+            strcpy(allRecords->record[j].receiver, temp.receiver);
+        }
+
+    }
+    sortRecords(allRecords, l, j), sortRecords(allRecords, j + 1, r);
+
+}
 
 
 

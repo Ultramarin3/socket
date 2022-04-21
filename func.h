@@ -31,4 +31,6 @@ void *get_in_addr(struct sockaddr *);
 int init_socket(const char *,const char *, int );
 int checkSerial(AllRecords *);
 int addLog(char *, char *);
+void sortRecords(AllRecords *,  int, int);
+
 #endif

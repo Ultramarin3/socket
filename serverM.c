@@ -132,11 +132,10 @@ char* checkUserInfo(char *token)
 
 }
 int checkSerNum(){
-    char *message = "2";
     int res = 0;
-    int serA = atoi(getInfoSever(HOSTNAMEA,PORTSERVERA, message));
-    int serB = atoi(getInfoSever(HOSTNAMEB,PORTSERVERB, message));
-    int serC = atoi(getInfoSever(HOSTNAMEC,PORTSERVERC, message)); 
+    int serA = atoi(getInfoSever(HOSTNAMEA,PORTSERVERA, "2"));
+    int serB = atoi(getInfoSever(HOSTNAMEB,PORTSERVERB, "2"));
+    int serC = atoi(getInfoSever(HOSTNAMEC,PORTSERVERC, "2")); 
     serA = serA > serB ? serA : serB;
     serA = serA > serC ? serA : serC;
     return ++serA; 
@@ -311,8 +310,11 @@ int main(void)
                     case 3:{
                         /* TXLISTt */
 
+                        char* messageA = getInfoSever(HOSTNAMEA,PORTSERVERA, "4");
+                        char* messageB = getInfoSever(HOSTNAMEA,PORTSERVERB, "4");
+                        char* messageC = getInfoSever(HOSTNAMEA,PORTSERVERC, "4");
                         
-
+                        sprintf(reply, "%s", "TLIST");
                         printf("operation 3\n");
                         break;
 
