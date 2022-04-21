@@ -15,8 +15,8 @@
 #include <netdb.h>
 #include "func.h"
 
-#define MYPORT "21515"	// the port users will be connecting to
-#define MYHOST "127.0.0.1" //the host name of serverC
+#define MYPORT "22515"	// the port users will be connecting to
+#define MYHOST "127.0.0.1" //the host name of serverB
 #define MAXBUFLEN 100
 
 int main(void)
@@ -28,7 +28,7 @@ int main(void)
 	socklen_t addr_len;
 	char s[INET6_ADDRSTRLEN];
     sockfd = init_socket(MYHOST, MYPORT, SOCK_DGRAM);
-	printf("The ServerA is up and running using UDP on port 21515\n");
+	printf("The ServerB is up and running using UDP on port 22515\n");
     while(1){
         addr_len = sizeof their_addr;
         if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
@@ -37,22 +37,21 @@ int main(void)
             exit(1);
         }
 
-        printf("serverA: got packet from %s\n",
+        printf("serverB: got packet from %s\n",
                inet_ntop(their_addr.ss_family,
                          get_in_addr((struct sockaddr *)&their_addr),
                          s, sizeof s));
-        printf("serverA: packet is %d bytes long\n", numbytes);
+        printf("serverB: packet is %d bytes long\n", numbytes);
         buf[numbytes] = '\0';
-        printf("serverA: packet contains \"%s\"\n", buf);
+        printf("serverB: packet contains \"%s\"\n", buf);
         int operationtype = buf[0] - '0';
         printf("operation type %d\n", operationtype);
-        char *user = buf + 1;
-
+        char *user = buf+1;
         AllRecords *allRecords;
         allRecords = malloc(sizeof(AllRecords));
         allRecords->numline = 0;
         allRecords->record = NULL;
-        getBlocktxt(allRecords, "./block1.txt");
+        getBlocktxt(allRecords, "./block2.txt");
         char reply[100];
         if(operationtype == 1){
             if(checkUser(allRecords, user)){
@@ -67,22 +66,22 @@ int main(void)
         }
         else if(operationtype == 3){
             printf("%s\n", user);
-            if(addLog("./block1.txt", user)){
+            if(addLog("./block2.txt", user)){
                 sprintf(reply, "%s", "success");
             }
             else{
                 sprintf(reply, "%s", "fail");
             }
-        } 
+        }
         
         printf("reply = %s", reply);
 
         if ((numbytes = sendto(sockfd, reply, strlen(reply), 0,
                                (const struct sockaddr *)&their_addr, (socklen_t)addr_len)) == -1) {
-            perror("serverC: sendto");
+            perror("serverB: sendto");
             exit(1);
         }
-        printf("serverC sent %d bytes\n", numbytes);
+        printf("serverB sent %d bytes\n", numbytes);
     }
 
     close(sockfd);
