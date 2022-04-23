@@ -102,7 +102,6 @@ int init_socket(const char *host,const char *port, int socketType){
     return sockfd;
 }
 void sortRecords(AllRecords *allRecords, int l, int r){
-    printf("sort\n");
     if(l >= r) return;
     int i = l - 1, j = r + 1, x = allRecords->record[l + (r - l)/2].num;
     while(i < j){
@@ -151,10 +150,43 @@ void getBlocktxt(AllRecords *allRecords, char *file){
                     &allRecords->record[count].amount);
         count++;
         allRecords->numline++;
+        if(count == initSize){
+            initSize *= 2;
+            allRecords->record = realloc(allRecords->record,initSize *sizeof(Records));
+        }
     }
     fclose(fp);
 
 }
+
+void getBlockmessage(AllRecords *allRecords, char *message){
+
+    int initSize = 3;
+    allRecords->record = malloc(initSize *sizeof(Records));
+    int count = allRecords->numline;
+
+    while(strlen(message) != 0){
+        char log[1500];
+        memset(log, 0, 1500);
+        int i = 0;
+        while(message[i++] != '\n');
+        message[i-1] = '\0';
+        strcpy(log, message);
+        message+=i;
+
+        sscanf(log, "%d %s %s %d", &allRecords->record[count].num, 
+                    allRecords->record[count].sender,
+                    allRecords->record[count].receiver, 
+                    &allRecords->record[count].amount);
+        count++;
+        allRecords->numline++;
+        if(count == initSize){
+            initSize *= 2;
+            allRecords->record = realloc(allRecords->record,initSize *sizeof(Records));
+        }
+    }
+}
+
 int checkWallet(AllRecords *allRecords, char *user){
     int res = 0;
     for(int i = 0; i< allRecords->numline;i++){
@@ -188,18 +220,18 @@ int checkSerial(AllRecords *allRecords){
     for(int i = 0; i< allRecords->numline;i++){
         ser = ser > allRecords->record[i].num ? ser : allRecords->record[i].num;
     }
-    printf("max ser %d", ser);
+    //printf("max ser %d", ser);
     return ser;
 }
 int addLog(char *file, char *transLog){
-    printf("add %s", transLog);
+    //printf("add %s", transLog);
 
     FILE *fp = fopen(file, "a");
     if(fp == NULL){
         return 0;
     }
-    printf("add success\n");
-    fprintf(fp, "\n%s",transLog);
+    //printf("add success\n");
+    fprintf(fp, "%s\n",transLog);
     fclose(fp);
     return 1;
 }

@@ -31,7 +31,9 @@
 
 
 
-#define MAXBUFLEN 100
+#define BUFLEN 1024*3
+#define MAXBUFLEN 1024*1024
+
 #define BACKLOG 10	 // how many pending connections queue will hold
 
 //send message to backend server and get reply
@@ -39,7 +41,7 @@ char* getInfoSever(char* hostname, char *port, char *message){
     int sockfd;
     int numbytes;
     struct sockaddr_storage their_addr;
-    char *buf = (char*)malloc(100*sizeof(char));
+    char *buf = (char*)malloc(MAXBUFLEN);
     struct sockaddr_in  dst_addr, my_addr;
     socklen_t len = sizeof(my_addr);
     socklen_t addr_len;
@@ -55,7 +57,7 @@ char* getInfoSever(char* hostname, char *port, char *message){
         perror("getsockname");
         exit(1);
     }
-    printf("Portnumber used to send to server A= %d\n", ntohs(my_addr.sin_port));
+   // printf("Portnumber used to send = %d\n", ntohs(my_addr.sin_port));
     
     dst_server = gethostbyname("localhost");
     portno = atoi(port);
@@ -65,24 +67,66 @@ char* getInfoSever(char* hostname, char *port, char *message){
          (char *)&dst_addr.sin_addr.s_addr,
           dst_server->h_length);
     dst_addr.sin_port = htons(portno);
-    printf("port number will be connecting to on server A = %d\n", ntohs(dst_addr.sin_port));
+    //printf("port number will be connecting to  = %d\n", ntohs(dst_addr.sin_port));
     if ((numbytes = sendto(sockfd, message, strlen(message), 0,(struct sockaddr *) &dst_addr,sizeof(dst_addr))) == -1) {
         perror("talker: sendto");
         exit(1);
     }
+    if(message[0] == '1' || message[0] == '3'){
+        if(strcmp(port, PORTSERVERA) == 0){
+            printf("The main server sent a request to server A\n");
+        }
+        else if (strcmp(port, PORTSERVERB) == 0)
+        {
+            printf("The main server sent a request to server B\n");
+        }
+        else if (strcmp(port, PORTSERVERC) == 0)
+        {
+            printf("The main server sent a request to server C\n");
+        }
+    }
 
-    printf("serverM sent %d bytes\n", numbytes);
-    printf("send message %s\n", message);
-    //receive from A
+
+    // printf("serverM sent %d bytes\n", numbytes);
+    // printf("send message %s\n", message);
+
     addr_len = sizeof their_addr;
-    if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
+    if ((numbytes = recvfrom(sockfd, buf, BUFLEN-1 , 0,
                              (struct sockaddr *)&their_addr, &addr_len)) == -1) {
         perror("recvfrom");
         exit(1);
     }
-    printf("serverM: receive packet is %d bytes long\n", numbytes);
+
+    if(message[0] == '1'){
+        if(strcmp(port, PORTSERVERA) == 0){
+            printf("The main server received transactions from Server A using UDP over port %s.\n", PORTSERVERA);
+        }
+        else if (strcmp(port, PORTSERVERB) == 0)
+        {
+            printf("The main server received transactions from Server B using UDP over port %s.\n", PORTSERVERB);
+        }
+        else if (strcmp(port, PORTSERVERC) == 0)
+        {
+            printf("The main server received transactions from Server C using UDP over port %s.\n", PORTSERVERC);
+        }
+    }
+    else if(message[0] == '3'){
+        if(strcmp(port, PORTSERVERA) == 0){
+            printf("The main server received feedback from Server A using UDP over port %s.\n", PORTSERVERA);
+        }
+        else if (strcmp(port, PORTSERVERB) == 0)
+        {
+            printf("The main server received feedbck from Server B using UDP over port %s.\n", PORTSERVERB);
+        }
+        else if (strcmp(port, PORTSERVERC) == 0)
+        {
+            printf("The main server received feedbak from Server C using UDP over port %s.\n", PORTSERVERC);
+        }
+
+    }
+    //printf("serverM: receive packet is %d bytes long\n", numbytes);
     buf[numbytes] = '\0';
-    printf("serverM: reveive packet contains \"%s\"\n", buf);
+    //printf("serverM: reveive packet contains \"%s\"\n", buf);
     close(sockfd);
     return buf;
 }
@@ -111,10 +155,9 @@ char* checkUserInfo(char *token)
         sum += atoi(replyC);
         validUser = 1;
     }
-
-    printf("sum %d", sum);
     
     if(validUser){
+        int remain = 1000 + sum;
         int numberCount = 0;
         int temp = abs(sum);
         while(temp != 0){
@@ -122,7 +165,7 @@ char* checkUserInfo(char *token)
             ++numberCount;
         }
         result = (char*)malloc(numberCount);
-        sprintf(result, "%d", sum);
+        sprintf(result, "%d", remain);
     }
     else{
         result = (char*)malloc(10);
@@ -140,6 +183,7 @@ int checkSerNum(){
     serA = serA > serC ? serA : serC;
     return ++serA; 
 }
+
 
 
 
@@ -176,7 +220,7 @@ int main(void)
     struct pollfd *pfds = malloc(sizeof *pfds * fd_size);
 	char s[INET6_ADDRSTRLEN];
     int numbytes;
-    char buf[MAXBUFLEN];
+    char buf[BUFLEN];
     
     sockfdA = init_socket(HOSTNAMEM,PORTCLIENTA, SOCK_STREAM);
     sockfdB = init_socket(HOSTNAMEM,PORTCLIENTB, SOCK_STREAM);
@@ -211,18 +255,18 @@ int main(void)
                     perror("getsockname");
                     exit(1);
                 }
-                printf("portnumber use to receive client = %d\n", ntohs(my_addr.sin_port));
+                //printf("portnumber use to receive client = %d\n", ntohs(my_addr.sin_port));
                 
                 
                 inet_ntop(their_addr.ss_family,
                     get_in_addr((struct sockaddr *)&their_addr),
                     s, sizeof s);
-                printf("server: got connection from %s\n", s);
+                //printf("server: got connection from %s\n", s);
 
                 if (!fork()) { // this is the child process
-                    //close(pfds[i].fd); // child doesn't need the listener
-
-                    if ((numbytes = recv(new_fd, buf, MAXBUFLEN-1, 0)) == -1) {
+                    close(sockfdA); // child doesn't need the listener
+                    close(sockfdB);
+                    if ((numbytes = recv(new_fd, buf, BUFLEN-1, 0)) == -1) {
                         perror("recv");
                         exit(1);
                     }
@@ -232,7 +276,7 @@ int main(void)
                     //struct pollfd *pfds = malloc(sizeof *pfds * fd_size);
                     // char *reply;
                     int operationtype = buf[0] - '0';
-                    printf("operation type %d\n", operationtype);
+                    //printf("operation type %d\n", operationtype);
                     char *operation = buf;
                     operation+=1;
                     
@@ -245,9 +289,9 @@ int main(void)
                         token = strtok_r(operation, " ", &operation);
                     }
 
-                    for(int k = 0; k < i; k++){
-                        printf("token %d = %s\n", k, tokens[k]);
-                    }
+                    // for(int k = 0; k < i; k++){
+                    //     printf("token %d = %s\n", k, tokens[k]);
+                    // }
 
                         
                     char reply[1500];
@@ -257,7 +301,8 @@ int main(void)
                     case 1:{
                         /* check wallet */
                         //char *s[] = malloc(sizeof)
-                        printf("operation 1\n");
+                        //printf("operation 1\n");
+                        printf("The main server received input=“%s” from the client using TCP over port %d.\n", tokens[0], ntohs(my_addr.sin_port));
                         strcpy(reply, checkUserInfo(tokens[0]));
                
                         break;
@@ -265,76 +310,119 @@ int main(void)
                         
                     case 2:{
                         /* transfer */
-                        printf("operation 2\n");
+                        //printf("operation 2\n");
+                        printf("The main server received from “%s” to transfer %s coins to “%s” using TCP over port %d.\n", 
+                                                        tokens[0], tokens[2], tokens[1], ntohs(my_addr.sin_port));
                         
                         char *firstUser = checkUserInfo(tokens[0]);
                         int transamount = atoi(tokens[2]);
                         int remain = 0;
                         if(strcmp(firstUser, "invalid") != 0){
                             int sum = atoi(firstUser);
+                            
                             if( transamount > sum){
-                                strcpy(reply,"no money");
+                                sprintf(reply,"%s%d","n",sum);
                                 break;
                             }
                             remain = sum - transamount;
+                            
                         }
                         else{
-                            strcpy(reply,"no user1");
+                            strcpy(reply,"1");
                             break;
                         }
                         //check first username in backend server 
                         char *secondUser = checkUserInfo(tokens[1]);
                         if(strcmp(secondUser, "invalid") == 0){
-                            strcpy(reply,"no user2");
+                            strcpy(reply,"2");
                             break;
-                        }
+                            }
                         //record transfer
                         int serNum = checkSerNum();
-                        printf("sernum = %d\n", serNum);
+                        //printf("sernum = %d\n", serNum);
                         char message[1500];
                         sprintf(message,"%s%d %s %s %s","3", serNum, tokens[0], tokens[1], tokens[2]);
-                        int random = (atoi(tokens[2])*atoi(tokens[2])) %3;
-                        printf("random = %d\n", random);
+                        int random = serNum %3;
+                        char temp[10];
+                        //printf("random = %d\n", random);
                         if(random == 0){
-                            strcpy(reply, getInfoSever(HOSTNAMEA,PORTSERVERA, message)); 
-                        }
+                            strcpy(temp, getInfoSever(HOSTNAMEA,PORTSERVERA, message)); 
+                            }
                         else if(random == 1){
-                            strcpy(reply, getInfoSever(HOSTNAMEA,PORTSERVERB, message));
+                            strcpy(temp, getInfoSever(HOSTNAMEA,PORTSERVERB, message));
+                            }
+                        else{
+                            strcpy(temp, getInfoSever(HOSTNAMEA,PORTSERVERC, message));
+                            }
+                        if(strcmp(temp, "success") == 0){
+                            sprintf(reply, "%s%d","s", remain);
+                            //printf("remain = %d", remain);
                         }
                         else{
-                            strcpy(reply, getInfoSever(HOSTNAMEA,PORTSERVERC, message));
+                            strcpy(reply, temp);
                         }
                         break;
-                    }
+                        }
                         
                     case 3:{
                         /* TXLISTt */
-
+                        printf("A TXLIST request has been received\n");
                         char* messageA = getInfoSever(HOSTNAMEA,PORTSERVERA, "4");
                         char* messageB = getInfoSever(HOSTNAMEA,PORTSERVERB, "4");
                         char* messageC = getInfoSever(HOSTNAMEA,PORTSERVERC, "4");
-                        
-                        sprintf(reply, "%s", "TLIST");
-                        printf("operation 3\n");
-                        break;
 
-                    }
+                        AllRecords *allRecords;
+                        allRecords = malloc(sizeof(AllRecords));
+                        allRecords->numline = 0;
+                        allRecords->record = NULL;
+                        char buf[strlen(messageA)+ strlen(messageB) + strlen(messageC)];
+                        sprintf(buf, "%s%s%s", messageA, messageB,messageC);
+
+                        getBlockmessage(allRecords, buf);
+                        sortRecords(allRecords, 0, allRecords->numline - 1);
+                        FILE *fp = fopen("alichain.txt", "w+");
+                        for(int i = 0; i < allRecords->numline; i++){
+                                fprintf(fp,"%d %s %s %d\n", allRecords->record[i].num, allRecords->record[i].sender, 
+                                        allRecords->record[i].receiver, allRecords->record[i].amount);
+                                        }
+
+                        printf("The sorted file is up and ready\n");
+                        exit(0);
+                        }
                     case 4:{
                         /* stats */
                         printf("operation 1\n");
                         break;
-                    }
+                        }
                         
                     default:{
                         printf("unknown operation\n");
                         break;
+                        }
                     }
-                    }
-                    printf("reply to client: %s", reply);
-
+                    //printf("reply to client: %s", reply);
+                    
                     if (send(new_fd, reply, strlen(reply), 0) == -1)
                         perror("send");
-                    //close(new_fd);
+
+                    if(operationtype == 1){
+                        if(ntohs(my_addr.sin_port) == atoi(PORTCLIENTA)){
+
+                            printf("The main server sent the current balance to client A\n");
+                        }
+                        else{
+                            printf("The main server sent the current balance to client B\n");
+                        }
+                    }
+                    else if(operationtype == 2){
+                        if(ntohs(my_addr.sin_port) == atoi(PORTCLIENTA)){
+                            printf("The main server sent the result of the transaction to client A\n");
+                        }
+                        else{
+                            printf("The main server sent the result of the transaction to client B\n");
+                        }
+                    }
+                    close(new_fd);
                     del_from_pfds(pfds, i, &fd_count);
                     exit(0);       //child exit
                 }

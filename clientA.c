@@ -16,7 +16,7 @@
 
 #define PORT "25515" // the port clientA will be connecting to
 
-#define MAXDATASIZE 100 // max number of bytes we can get at once 
+#define MAXDATASIZE 1024*3 // max number of bytes we can get at once 
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -78,28 +78,38 @@ int main(int argc, char *argv[])
         perror("getsockname");
         exit(1);
     }
-    printf("getPortnumber = %d\n", ntohs(my_addr.sin_port));
+    //printf("getPortnumber = %d\n", ntohs(my_addr.sin_port));
 
 	inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
 			s, sizeof s);
-	printf("client: connecting to %s\n", s);
+	//printf("client: connecting to %s\n", s);
+	printf("The clientA is up and running.\n");
 
 	freeaddrinfo(servinfo); // all done with this structure
-	char c[100];
+	char c[MAXDATASIZE];
 	if(argc == 2){
 		if(!strcmp(argv[1], "TXLIST")){
 			strcpy(c,"3"); //operation 3: TXLIST
+			printf("“%s” sent a sorted list request to the main server.\n", argv[0]);
 		}
-		else strcpy(c,"1"); //operation 1: check wallet
+		else {
+			strcpy(c,"1"); //operation 1: check wallet
+			printf("“%s” sent a balance enquiry request to the main server\n", argv[1]);
+
+		}
 	}
 	else if(argc == 3) strcpy(c,"4"); //operation 4: stats
-	else if(argc == 4) strcpy(c,"2"); //operation 2: transfer
+	else if(argc == 4) {
+		strcpy(c,"2"); //operation 2: transfer
+		printf("“%s” has requested to transfer %s coins to “%s”\n", argv[1], argv[3], argv[2]);
+
+	}
 	else strcpy(c,"0");    //unknow operation
     for(int i = 1; i< argc;i++){
         strcat(c, argv[i]);
         strcat(c, " ");
     }
-		printf("send message: %s\n", c);	
+	//printf("send message: %s\n", c);	
 
     if ((numbytes = send(sockfd, c, strlen(c), 0)) == -1) {
         perror("send");
@@ -111,8 +121,39 @@ int main(int argc, char *argv[])
 	}
 
 	buf[numbytes] = '\0';
+	if(argc == 2){
+		if(strcmp(argv[1], "TXLIST")){
+			if(strcmp(buf, "invalid")){
+				printf("The current balance of “%s“ is %s", argv[1], buf);
+			}
+			else{
+				printf("”%s“ is not part of the network\n", argv[1]);
+			}
 
-	printf("client: received '%s'\n",buf);
+		}
+	}
+	else if(argc == 4){
+		if(buf[0] == 's'){
+			char *balance = buf;
+			printf("”%s“ successfully transferred %s alicoins to ”%s“\n", argv[1], argv[3], argv[2]);
+			printf("The current balance of ”%s“ is: %s\n", argv[1], ++balance);
+		}
+		else{
+			if(buf[0] == 'n'){
+				char *balance = buf;
+				printf("”%s“ was unable to transfer %s alicoins to ”%s“ because of insufficient balance.\n", argv[1], argv[3], argv[2]);
+				printf("The current balance of ”%s“ is : %s alicoins\n", argv[1], ++balance);
+			}
+			else if(buf[0] == '1'){
+				printf("Unable to proceed with the transaction as ”%s“ is not part of the network\n", argv[1]);
+			}
+			else if(buf[0] == '2'){
+				printf("Unable to proceed with the transaction as ”%s“ is not part of the network\n", argv[2]);
+			}
+		}
+	}
+
+	
 
 	close(sockfd);
 

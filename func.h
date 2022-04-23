@@ -32,5 +32,7 @@ int init_socket(const char *,const char *, int );
 int checkSerial(AllRecords *);
 int addLog(char *, char *);
 void sortRecords(AllRecords *,  int, int);
+void getBlockmessage(AllRecords *, char *);
+
 
 #endif

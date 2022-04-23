@@ -28,7 +28,7 @@ int main(void)
 	socklen_t addr_len;
 	char s[INET6_ADDRSTRLEN];
     sockfd = init_socket(MYHOST, MYPORT, SOCK_DGRAM);
-	printf("The ServerA is up and running using UDP on port 21515\n");
+	printf("The ServerA is up and running using UDP on port 21515.\n");
     while(1){
         addr_len = sizeof their_addr;
         if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
@@ -36,16 +36,16 @@ int main(void)
             perror("recvfrom");
             exit(1);
         }
-
-        printf("serverA: got packet from %s\n",
-               inet_ntop(their_addr.ss_family,
-                         get_in_addr((struct sockaddr *)&their_addr),
-                         s, sizeof s));
-        printf("serverA: packet is %d bytes long\n", numbytes);
+        printf("The serverA received a request from the Main Server.\n");
+        // printf("serverA: got packet from %s\n",
+        //        inet_ntop(their_addr.ss_family,
+        //                  get_in_addr((struct sockaddr *)&their_addr),
+        //                  s, sizeof s));
+        //printf("serverA: packet is %d bytes long\n", numbytes);
         buf[numbytes] = '\0';
-        printf("serverA: packet contains \"%s\"\n", buf);
+        //printf("serverA: packet contains \"%s\"\n", buf);
         int operationtype = buf[0] - '0';
-        printf("operation type %d\n", operationtype);
+        //printf("operation type %d\n", operationtype);
         char *user = buf + 1;
 
         AllRecords *allRecords;
@@ -53,7 +53,9 @@ int main(void)
         allRecords->numline = 0;
         allRecords->record = NULL;
         getBlocktxt(allRecords, "./block1.txt");
-        char reply[100];
+        char reply[1500*allRecords->numline] ;
+        memset(reply, 0, 1500*allRecords->numline);
+
         if(operationtype == 1){
             if(checkUser(allRecords, user)){
                 int value = checkWallet(allRecords, user);
@@ -66,7 +68,7 @@ int main(void)
             sprintf(reply, "%d", serNum);
         }
         else if(operationtype == 3){
-            printf("%s\n", user);
+            //printf("%s\n", user);
             if(addLog("./block1.txt", user)){
                 sprintf(reply, "%s", "success");
             }
@@ -75,34 +77,25 @@ int main(void)
             }
         } 
         else if (operationtype == 4){
-            /* code */
-            // AllRecords *sortedRecords;
-            // sortedRecords = malloc(sizeof(AllRecords));
-            // sortedRecords->numline = 0;
-            // sortedRecords->record = NULL;
-            for(int i = 0; i < allRecords->numline; i++){
-                printf("%d %s %s %d\n", allRecords->record[i].num, allRecords->record[i].sender, 
-                                        allRecords->record[i].receiver, allRecords->record[i].amount);
-            }
-            sortRecords(allRecords, 0, allRecords->numline - 1);
 
             for(int i = 0; i < allRecords->numline; i++){
-                printf("%d %s %s %d\n", allRecords->record[i].num, allRecords->record[i].sender, 
+                char message[1500];
+                memset(message, 0 ,1500);
+                sprintf(message,"%d %s %s %d\n", allRecords->record[i].num, allRecords->record[i].sender, 
                                         allRecords->record[i].receiver, allRecords->record[i].amount);
+                strcat(reply, message);
             }
-            sprintf(reply, "%s", "TLIST");
-
         }
         
         
-        printf("reply = %s", reply);
+        //printf("reply = %s", reply);
 
         if ((numbytes = sendto(sockfd, reply, strlen(reply), 0,
                                (const struct sockaddr *)&their_addr, (socklen_t)addr_len)) == -1) {
             perror("serverC: sendto");
             exit(1);
         }
-        printf("serverC sent %d bytes\n", numbytes);
+        printf("The ServerA finished sending the response to the Main Server.\n");
     }
 
     close(sockfd);
