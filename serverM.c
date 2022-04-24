@@ -15,6 +15,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <poll.h>
+#include <time.h>
 #include "func.h"
 
 #define PORTCLIENTA "25515"  // the port client A will be connecting to
@@ -31,7 +32,7 @@
 
 
 
-#define BUFLEN 1024*3
+#define BUFLEN 1024*2
 #define MAXBUFLEN 1024*1024
 
 #define BACKLOG 10	 // how many pending connections queue will hold
@@ -72,17 +73,18 @@ char* getInfoSever(char* hostname, char *port, char *message){
         perror("talker: sendto");
         exit(1);
     }
+
     if(message[0] == '1' || message[0] == '3'){
         if(strcmp(port, PORTSERVERA) == 0){
-            printf("The main server sent a request to server A\n");
+            printf("The main server sent a request to server A.\n");
         }
         else if (strcmp(port, PORTSERVERB) == 0)
         {
-            printf("The main server sent a request to server B\n");
+            printf("The main server sent a request to server B.\n");
         }
         else if (strcmp(port, PORTSERVERC) == 0)
         {
-            printf("The main server sent a request to server C\n");
+            printf("The main server sent a request to server C.\n");
         }
     }
 
@@ -134,7 +136,8 @@ char* getInfoSever(char* hostname, char *port, char *message){
 char* checkUserInfo(char *token)
 {
     char *result;
-    char message[600];
+    char message[BUFLEN];
+    //add operation type
     strcpy(message, "1");
     strcat(message, token);
     char *replyA = getInfoSever(HOSTNAMEA,PORTSERVERA, message);
@@ -225,7 +228,7 @@ int main(void)
     sockfdA = init_socket(HOSTNAMEM,PORTCLIENTA, SOCK_STREAM);
     sockfdB = init_socket(HOSTNAMEM,PORTCLIENTB, SOCK_STREAM);
 
-	printf("The main server is up and running\n");
+	printf("The main server is up and running.\n");
     
     pfds[0].fd = sockfdA;
     pfds[0].events = POLLIN;
@@ -294,8 +297,8 @@ int main(void)
                     // }
 
                         
-                    char reply[1500];
-                    memset(reply, 0, 1500);
+                    char reply[BUFLEN];
+                    memset(reply, 0, BUFLEN);
                     switch (operationtype)
                     {
                     case 1:{
@@ -340,9 +343,10 @@ int main(void)
                         //record transfer
                         int serNum = checkSerNum();
                         //printf("sernum = %d\n", serNum);
-                        char message[1500];
+                        char message[BUFLEN];
                         sprintf(message,"%s%d %s %s %s","3", serNum, tokens[0], tokens[1], tokens[2]);
-                        int random = serNum %3;
+                        srand((unsigned)time( NULL ) );
+                        int random = rand() %3;
                         char temp[10];
                         //printf("random = %d\n", random);
                         if(random == 0){
@@ -354,6 +358,7 @@ int main(void)
                         else{
                             strcpy(temp, getInfoSever(HOSTNAMEA,PORTSERVERC, message));
                             }
+
                         if(strcmp(temp, "success") == 0){
                             sprintf(reply, "%s%d","s", remain);
                             //printf("remain = %d", remain);
@@ -366,7 +371,7 @@ int main(void)
                         
                     case 3:{
                         /* TXLISTt */
-                        printf("A TXLIST request has been received\n");
+                        printf("A TXLIST request has been received.\n");
                         char* messageA = getInfoSever(HOSTNAMEA,PORTSERVERA, "4");
                         char* messageB = getInfoSever(HOSTNAMEA,PORTSERVERB, "4");
                         char* messageC = getInfoSever(HOSTNAMEA,PORTSERVERC, "4");
@@ -375,10 +380,10 @@ int main(void)
                         allRecords = malloc(sizeof(AllRecords));
                         allRecords->numline = 0;
                         allRecords->record = NULL;
-                        char buf[strlen(messageA)+ strlen(messageB) + strlen(messageC)];
-                        sprintf(buf, "%s%s%s", messageA, messageB,messageC);
+                        char records[strlen(messageA)+ strlen(messageB) + strlen(messageC)];
+                        sprintf(records, "%s%s%s", messageA, messageB,messageC);
 
-                        getBlockmessage(allRecords, buf);
+                        getBlockmessage(allRecords, records);
                         sortRecords(allRecords, 0, allRecords->numline - 1);
                         FILE *fp = fopen("alichain.txt", "w+");
                         for(int i = 0; i < allRecords->numline; i++){
@@ -386,17 +391,18 @@ int main(void)
                                         allRecords->record[i].receiver, allRecords->record[i].amount);
                                         }
 
-                        printf("The sorted file is up and ready\n");
+                        printf("The sorted file is up and ready.\n");
                         exit(0);
                         }
                     case 4:{
                         /* stats */
-                        printf("operation 1\n");
+                        //printf("operation 4\n");
                         break;
                         }
                         
                     default:{
                         printf("unknown operation\n");
+                        exit(0);
                         break;
                         }
                     }
@@ -406,20 +412,22 @@ int main(void)
                         perror("send");
 
                     if(operationtype == 1){
-                        if(ntohs(my_addr.sin_port) == atoi(PORTCLIENTA)){
-
-                            printf("The main server sent the current balance to client A\n");
+                        if(strcmp(reply, "invalid") == 0){
+                            printf("Username was not found on database.\n");
+                        }
+                        else if(ntohs(my_addr.sin_port) == atoi(PORTCLIENTA)){
+                            printf("The main server sent the current balance to client A.\n");
                         }
                         else{
-                            printf("The main server sent the current balance to client B\n");
+                            printf("The main server sent the current balance to client B.\n");
                         }
                     }
                     else if(operationtype == 2){
                         if(ntohs(my_addr.sin_port) == atoi(PORTCLIENTA)){
-                            printf("The main server sent the result of the transaction to client A\n");
+                            printf("The main server sent the result of the transaction to client A.\n");
                         }
                         else{
-                            printf("The main server sent the result of the transaction to client B\n");
+                            printf("The main server sent the result of the transaction to client B.\n");
                         }
                     }
                     close(new_fd);

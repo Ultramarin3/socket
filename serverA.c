@@ -17,7 +17,7 @@
 
 #define MYPORT "21515"	// the port users will be connecting to
 #define MYHOST "127.0.0.1" //the host name of serverC
-#define MAXBUFLEN 100
+#define MAXBUFLEN 1024*2
 
 int main(void)
 {
@@ -77,7 +77,6 @@ int main(void)
             }
         } 
         else if (operationtype == 4){
-
             for(int i = 0; i < allRecords->numline; i++){
                 char message[1500];
                 memset(message, 0 ,1500);

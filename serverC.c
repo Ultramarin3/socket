@@ -17,7 +17,7 @@
 
 #define MYPORT "23515"	// the port users will be connecting to
 #define MYHOST "127.0.0.1" //the host name of serverC
-#define MAXBUFLEN 100
+#define MAXBUFLEN 1024*2
 
 int main(void)
 {
@@ -37,17 +37,15 @@ int main(void)
             exit(1);
         }
         printf("The serverC received a request from the Main Server.\n");
-
-
         // printf("serverC: got packet from %s\n",
         //        inet_ntop(their_addr.ss_family,
         //                  get_in_addr((struct sockaddr *)&their_addr),
         //                  s, sizeof s));
         // printf("serverC: packet is %d bytes long\n", numbytes);
         buf[numbytes] = '\0';
-        // printf("serverC: packet contains \"%s\"\n", buf);
+        //printf("serverC: packet contains \"%s\"\n", buf);
         int operationtype = buf[0] - '0';
-        // printf("operation type %d\n", operationtype);
+        //printf("operation type %d\n", operationtype);
         char *user = buf + 1;
 
         AllRecords *allRecords;
@@ -58,12 +56,14 @@ int main(void)
         char reply[1500*allRecords->numline];
         memset(reply, 0, 1500*allRecords->numline);
 
+
         if(operationtype == 1){
             if(checkUser(allRecords, user)){
                 int value = checkWallet(allRecords, user);
                 sprintf(reply,"%d", value);
             }
             else strcpy(reply,"invalidUser");
+
         }
         else if(operationtype == 2){
             int serNum = checkSerial(allRecords);

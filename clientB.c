@@ -87,18 +87,20 @@ int main(int argc, char *argv[])
 	if(argc == 2){
 		if(!strcmp(argv[1], "TXLIST")){
 			strcpy(c,"3"); //operation 3: TXLIST
-			printf("“%s” sent a sorted list request to the main server.\n", argv[0]);
+			char* temp = argv[0];
+			temp +=2;
+			printf("“%s” sent a sorted list request to the main server.\n", temp);
 		}
 		else {
 			strcpy(c,"1"); //operation 1: check wallet
-			printf("“%s” sent a balance enquiry request to the main server\n", argv[1]);
+			printf("“%s” sent a balance enquiry request to the main server.\n", argv[1]);
 
 		}
 	}
 	else if(argc == 3) strcpy(c,"4"); //operation 4: stats
 	else if(argc == 4) {
 		strcpy(c,"2"); //operation 2: transfer
-		printf("“%s” has requested to transfer %s coins to “%s”\n", argv[1], argv[3], argv[2]);
+		printf("“%s” has requested to transfer %s coins to “%s”.\n", argv[1], argv[3], argv[2]);
 
 	}
 	else strcpy(c,"0");    //unknow operation
@@ -121,10 +123,10 @@ int main(int argc, char *argv[])
 	if(argc == 2){
 		if(strcmp(argv[1], "TXLIST")){
 			if(strcmp(buf, "invalid")){
-				printf("The current balance of “%s” is %s\n", argv[1], buf);
+				printf("The current balance of “%s” is %s.\n", argv[1], buf);
 			}
 			else{
-				printf("“%s” is not part of the network\n", argv[1]);
+				printf("“%s” is not part of the network.\n", argv[1]);
 			}
 
 		}
@@ -132,20 +134,20 @@ int main(int argc, char *argv[])
 	else if(argc == 4){
 		if(buf[0] == 's'){
 			char *balance = buf;
-			printf("“%s” successfully transferred %s alicoins to “%s”\n", argv[1], argv[3], argv[2]);
-			printf("The current balance of “%s” is: %s\n", argv[1], ++balance);
+			printf("“%s” successfully transferred %s alicoins to “%s”.\n", argv[1], argv[3], argv[2]);
+			printf("The current balance of “%s” is: %s.\n", argv[1], ++balance);
 		}
 		else{
 			if(buf[0] == 'n'){
 				char *balance = buf;
 				printf("“%s” was unable to transfer %s alicoins to “%s” because of insufficient balance.\n", argv[1], argv[3], argv[2]);
-				printf("The current balance of “%s” is : %s alicoins\n", argv[1], ++balance);
+				printf("The current balance of “%s” is : %s alicoins.\n", argv[1], ++balance);
 			}
 			else if(buf[0] == '1'){
-				printf("Unable to proceed with the transaction as “%s” is not part of the network\n", argv[1]);
+				printf("Unable to proceed with the transaction as “%s” is not part of the network.\n", argv[1]);
 			}
 			else if(buf[0] == '2'){
-				printf("Unable to proceed with the transaction as “%s” is not part of the network\n", argv[2]);
+				printf("Unable to proceed with the transaction as “%s” is not part of the network.\n", argv[2]);
 			}
 		}
 	}

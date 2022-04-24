@@ -144,7 +144,8 @@ void getBlocktxt(AllRecords *allRecords, char *file){
     }
     int count = 0;
     while(!feof(fp)){
-        fscanf(fp, "%d %s %s %d", &allRecords->record[count].num, 
+
+        fscanf(fp, "%d %s %s %d\n", &allRecords->record[count].num, 
                     allRecords->record[count].sender,
                     allRecords->record[count].receiver, 
                     &allRecords->record[count].amount);

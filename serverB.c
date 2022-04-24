@@ -17,7 +17,7 @@
 
 #define MYPORT "22515"	// the port users will be connecting to
 #define MYHOST "127.0.0.1" //the host name of serverB
-#define MAXBUFLEN 100
+#define MAXBUFLEN 1024*2
 
 int main(void)
 {

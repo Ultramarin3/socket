@@ -25,6 +25,16 @@
         "complex": "c",
         "__bit_reference": "c",
         "bitset": "c",
-        "unordered_map": "c"
+        "unordered_map": "c",
+        "__node_handle": "c",
+        "atomic": "c",
+        "cstddef": "c",
+        "__memory": "c",
+        "optional": "c",
+        "system_error": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "__functional_base": "c",
+        "iterator": "c"
     }
 }
