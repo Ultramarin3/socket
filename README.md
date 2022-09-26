@@ -5,13 +5,21 @@ The blockcain contains 1 Main Server, 2 Clients, and 3 Backend Server. The clien
 
 ## CHECK WALLET
 For this operation, one Client can fetch the target user's balance in the wallet. The Main Server will interact with 3 Backend Servers to get the information of the target username and retrun the amount of balance
+
 Commandline operation:
+
 `./[clinetname] [username]`
 
 ## TXCOINS
 For this operation, one Client can transfer coins from one user to another user. The Main Server will interact with 3 Backend Servers process the transation and record it in one of the Backend Servers.
+
 Commandline operation:
+
 `./[clinetname] [sender username] [receiver username] [transfer amout]`
 
 ## TXLIST
 For this operation, the client willrequest to get the full text version of all the rransactions that have been taking place and save it on a file located on the Main Server.
+
+Commandline operation:
+
+`./[clinetname] TXLIST`
